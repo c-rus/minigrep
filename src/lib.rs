@@ -1,5 +1,5 @@
-use std::fs;
 use std::error::Error;
+use std::fs;
 
 #[derive(Debug, PartialEq)]
 pub struct Config {
@@ -8,13 +8,13 @@ pub struct Config {
 }
 
 impl Config {
-    /// Returns a `Result` value that will contain a `Config` instance in the 
+    /// Returns a `Result` value that will contain a `Config` instance in the
     /// successful case and will describe the problem in the error case.
     pub fn new(args: &[String]) -> Result<Config, &str> {
         //using panic! is more appropriate for a programming problem than a usage problem
         if args.len() < 3 {
             //panic!("not enough arguments");
-            return Err("not enough arguments")
+            return Err("not enough arguments");
         }
 
         //the `args` variable is the owner of the argument values and is only
@@ -22,9 +22,9 @@ impl Config {
         //borrowing rules if `Config` tried to take ownership of the values in `args`.
         let query = args[1].clone();
         let filename = args[2].clone();
-    
+
         Ok(Config {
-            query: query, 
+            query: query,
             filename: filename,
         })
     }
@@ -42,11 +42,32 @@ mod tests {
         let v = vec!["minigrep".to_string(), "2".to_string()];
         assert_eq!("not enough arguments", Config::new(&v).unwrap_err());
 
-        let v = vec!["minigrep".to_string(), "word".to_string(), "data.txt".to_string()];
-        assert_eq!(Config { query: v[1].clone(), filename: v[2].clone() }, Config::new(&v).unwrap());
+        let v = vec![
+            "minigrep".to_string(),
+            "word".to_string(),
+            "data.txt".to_string(),
+        ];
+        assert_eq!(
+            Config {
+                query: v[1].clone(),
+                filename: v[2].clone()
+            },
+            Config::new(&v).unwrap()
+        );
 
-        let v = vec!["minigrep".to_string(), "word".to_string(), "data.txt".to_string(), "extra-arg".to_string()];
-        assert_eq!(Config { query: v[1].clone(), filename: v[2].clone() }, Config::new(&v).unwrap());
+        let v = vec![
+            "minigrep".to_string(),
+            "word".to_string(),
+            "data.txt".to_string(),
+            "extra-arg".to_string(),
+        ];
+        assert_eq!(
+            Config {
+                query: v[1].clone(),
+                filename: v[2].clone()
+            },
+            Config::new(&v).unwrap()
+        );
     }
 }
 
@@ -75,7 +96,7 @@ fn test_run() {
         query: "the".to_string(),
         filename: "./data/unknown-file.txt".to_string(),
     };
-    
+
     //panics if did not get an error
     run(config).expect_err("accessing an invalid file");
 }
@@ -90,7 +111,7 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
             results.push(line);
         }
     }
-    
+
     results
 }
 
