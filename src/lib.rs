@@ -1,6 +1,7 @@
 use std::fs;
 use std::error::Error;
 
+#[derive(Debug, PartialEq)]
 pub struct Config {
     pub query: String,
     pub filename: String,
@@ -29,6 +30,26 @@ impl Config {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_config_new() {
+        let v = vec![];
+        assert_eq!("not enough arguments", Config::new(&v).unwrap_err());
+
+        let v = vec!["minigrep".to_string(), "2".to_string()];
+        assert_eq!("not enough arguments", Config::new(&v).unwrap_err());
+
+        let v = vec!["minigrep".to_string(), "word".to_string(), "data.txt".to_string()];
+        assert_eq!(Config { query: v[1].clone(), filename: v[2].clone() }, Config::new(&v).unwrap());
+
+        let v = vec!["minigrep".to_string(), "word".to_string(), "data.txt".to_string(), "extra-arg".to_string()];
+        assert_eq!(Config { query: v[1].clone(), filename: v[2].clone() }, Config::new(&v).unwrap());
+    }
+}
+
 //use the trait object `Box<dyn Error>` to give flexibility in returning error values
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     //`?` will return error value from current function for caller to handle
@@ -37,4 +58,22 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     println!("With text:\n{}", contents);
 
     Ok(())
+}
+
+#[test]
+fn test_run() {
+    let config = Config {
+        query: "the".to_string(),
+        filename: "./data/poem.txt".to_string(),
+    };
+
+    assert_eq!((), run(config).unwrap());
+
+    let config = Config {
+        query: "the".to_string(),
+        filename: "./data/unknown-file.txt".to_string(),
+    };
+    
+    //panics if did not get an error
+    run(config).expect_err("accessing an invalid file");
 }
