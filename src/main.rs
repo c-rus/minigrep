@@ -1,5 +1,5 @@
 //! # minigrip main file
-//! 
+//!
 //! `minigrip` is a simple clone for the `grip` command-line tool
 //! taken from the Rust Programming Language book.
 

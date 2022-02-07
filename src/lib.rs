@@ -1,5 +1,5 @@
 //! # minigrip lib file
-//! 
+//!
 //! `minigrip` is a simple clone for the `grip` command-line tool
 //! taken from the Rust Programming Language book.
 
@@ -15,10 +15,9 @@ pub struct Config {
 }
 
 impl Config {
-
     /// Returns a `Result` value that will contain a `Config` instance in the
     /// successful case.
-    /// 
+    ///
     /// # Errors
     /// When there is less than 3 arguments provided.
     pub fn new<T>(mut args: T) -> Result<Config, &'static str>
@@ -64,12 +63,9 @@ mod tests {
             "Didn't get a query string",
             Config::new(v.into_iter()).unwrap_err()
         );
-        
+
         //test < 3 arguments
-        let v = vec![
-            String::from("minigrep"), 
-            String::from("rusty")
-        ];
+        let v = vec![String::from("minigrep"), String::from("rusty")];
         assert_eq!(
             "Didn't get a file name",
             Config::new(v.into_iter()).unwrap_err()
