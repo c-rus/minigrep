@@ -5,14 +5,11 @@ use std::process;
 use minigrep::Config;
 
 fn main() {
-    //specific datatype annotation for collect to deduce the type
-    let args: Vec<String> = env::args().collect();
-
-    //borrow `args` for this function
+    //moves args (iterator!) into config new (passes ownership to function)
     //handle result being returned by using a 'closure' (anonymous function)
-    let config = Config::new(&args).unwrap_or_else(|err| {
+    let config = Config::new(env::args()).unwrap_or_else(|err| {
         eprintln!("Problem parsing arguments: {}", err);
-        
+
         process::exit(1);
     });
 

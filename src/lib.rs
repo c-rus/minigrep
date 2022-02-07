@@ -1,6 +1,6 @@
+use std::env;
 use std::error::Error;
 use std::fs;
-use std::env;
 
 #[derive(Debug, PartialEq)]
 pub struct Config {
@@ -11,19 +11,25 @@ pub struct Config {
 
 impl Config {
     /// Returns a `Result` value that will contain a `Config` instance in the
-    /// successful case and will describe the problem in the error case.
-    pub fn new(args: &[String]) -> Result<Config, &str> {
-        //using panic! is more appropriate for a programming problem than a usage problem
-        if args.len() < 3 {
-            //panic!("not enough arguments");
-            return Err("not enough arguments");
-        }
+    /// successful case and will describe the problem in the error case (less than
+    /// 3 arguments- including exe path).
+    pub fn new<T>(mut args: T) -> Result<Config, &'static str>
+    where
+        T: Iterator<Item = String>,
+    {
+        //skip exe path
+        args.next();
 
-        //the `args` variable is the owner of the argument values and is only
-        //letting `parse_config` borrow them, which means we would violate Rust's
-        //borrowing rules if `Config` tried to take ownership of the values in `args`.
-        let query = args[1].clone();
-        let filename = args[2].clone();
+        let query = match args.next() {
+            Some(arg) => arg,
+            //using panic! is more appropriate for a programming problem than a usage problem
+            None => return Err("Didn't get a query string"),
+        };
+
+        let filename = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a file name"),
+        };
 
         let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
 
@@ -42,15 +48,21 @@ mod tests {
     #[test]
     fn test_config_new() {
         let v = vec![];
-        assert_eq!("not enough arguments", Config::new(&v).unwrap_err());
+        assert_eq!(
+            "Didn't get a query string",
+            Config::new(v.into_iter()).unwrap_err()
+        );
 
-        let v = vec!["minigrep".to_string(), "2".to_string()];
-        assert_eq!("not enough arguments", Config::new(&v).unwrap_err());
+        let v = vec![String::from("minigrep"), String::from("rusty")];
+        assert_eq!(
+            "Didn't get a file name",
+            Config::new(v.into_iter()).unwrap_err()
+        );
 
         let v = vec![
-            "minigrep".to_string(),
-            "word".to_string(),
-            "data.txt".to_string(),
+            String::from("minigrep"),
+            String::from("word"),
+            String::from("data.txt"),
         ];
         assert_eq!(
             Config {
@@ -58,7 +70,7 @@ mod tests {
                 filename: v[2].clone(),
                 case_sensitive: env::var("CASE_INSENSITIVE").is_err(),
             },
-            Config::new(&v).unwrap()
+            Config::new(v.into_iter()).unwrap()
         );
 
         let v = vec![
@@ -73,7 +85,7 @@ mod tests {
                 filename: v[2].clone(),
                 case_sensitive: env::var("CASE_INSENSITIVE").is_err(),
             },
-            Config::new(&v).unwrap()
+            Config::new(v.into_iter()).unwrap()
         );
     }
 }
@@ -85,7 +97,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
     //branch based on case sense flag
     let results = if config.case_sensitive {
-        search(&config.query, &contents) 
+        search(&config.query, &contents)
     } else {
         search_case_insensitive(&config.query, &contents)
     };
@@ -143,10 +155,7 @@ Duct tape.";
     assert_eq!(vec!["safe, fast, productive."], search(query, contents));
 }
 
-pub fn search_case_insensitive<'a>(
-    query: &str, 
-    contents: &'a str
-) -> Vec<&'a str> {
+pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     //shadowed variable of same name as parameter (creates new datatype String)
     let query = query.to_lowercase();
 
