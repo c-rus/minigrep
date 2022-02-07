@@ -132,15 +132,10 @@ fn test_run() {
 //the lifetime parameter `'a` specifies which argument lifetime is connected to
 //the lifetime of the return value.
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    let mut results = Vec::new();
-
-    for line in contents.lines() {
-        if line.contains(query) {
-            results.push(line);
-        }
-    }
-
-    results
+    contents
+        .lines()
+        .filter(|line| line.contains(query))
+        .collect()
 }
 
 #[test]
@@ -156,19 +151,10 @@ Duct tape.";
 }
 
 pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    //shadowed variable of same name as parameter (creates new datatype String)
-    let query = query.to_lowercase();
-
-    let mut results = Vec::new();
-
-    for line in contents.lines() {
-        //pass query String as string slice with '&' borrow
-        if line.to_lowercase().contains(&query) {
-            results.push(line);
-        }
-    }
-
-    results
+    contents
+        .lines()
+        .filter(|line| line.to_lowercase().contains(&query.to_lowercase()))
+        .collect()
 }
 
 #[test]
