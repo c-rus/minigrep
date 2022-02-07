@@ -1,3 +1,8 @@
+//! # minigrip main file
+//! 
+//! `minigrip` is a simple clone for the `grip` command-line tool
+//! taken from the Rust Programming Language book.
+
 use std::env;
 use std::process;
 
@@ -5,7 +10,7 @@ use std::process;
 use minigrep::Config;
 
 fn main() {
-    //moves args (iterator!) into config new (passes ownership to function)
+    //moves args (iterator) into config new (passes ownership to function)
     //handle result being returned by using a 'closure' (anonymous function)
     let config = Config::new(env::args()).unwrap_or_else(|err| {
         eprintln!("Problem parsing arguments: {}", err);

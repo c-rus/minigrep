@@ -1,3 +1,8 @@
+//! # minigrip lib file
+//! 
+//! `minigrip` is a simple clone for the `grip` command-line tool
+//! taken from the Rust Programming Language book.
+
 use std::env;
 use std::error::Error;
 use std::fs;
@@ -10,9 +15,12 @@ pub struct Config {
 }
 
 impl Config {
+
     /// Returns a `Result` value that will contain a `Config` instance in the
-    /// successful case and will describe the problem in the error case (less than
-    /// 3 arguments- including exe path).
+    /// successful case.
+    /// 
+    /// # Errors
+    /// When there is less than 3 arguments provided.
     pub fn new<T>(mut args: T) -> Result<Config, &'static str>
     where
         T: Iterator<Item = String>,
@@ -31,7 +39,10 @@ impl Config {
             None => return Err("Didn't get a file name"),
         };
 
-        let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
+        let case_sensitive = match args.filter(|arg| arg == "--any").count() {
+            0 => env::var("CASE_INSENSITIVE").is_err(),
+            _ => false,
+        };
 
         Ok(Config {
             query: query,
@@ -47,18 +58,24 @@ mod tests {
 
     #[test]
     fn test_config_new() {
+        //test 0 arguments
         let v = vec![];
         assert_eq!(
             "Didn't get a query string",
             Config::new(v.into_iter()).unwrap_err()
         );
-
-        let v = vec![String::from("minigrep"), String::from("rusty")];
+        
+        //test < 3 arguments
+        let v = vec![
+            String::from("minigrep"), 
+            String::from("rusty")
+        ];
         assert_eq!(
             "Didn't get a file name",
             Config::new(v.into_iter()).unwrap_err()
         );
 
+        //positive test case (ideal)
         let v = vec![
             String::from("minigrep"),
             String::from("word"),
@@ -73,6 +90,7 @@ mod tests {
             Config::new(v.into_iter()).unwrap()
         );
 
+        //test extra arguments
         let v = vec![
             "minigrep".to_string(),
             "word".to_string(),
@@ -87,10 +105,44 @@ mod tests {
             },
             Config::new(v.into_iter()).unwrap()
         );
+
+        //test using --any to specify insensitive case
+        let v = vec![
+            "minigrep".to_string(),
+            "word".to_string(),
+            "data.txt".to_string(),
+            "--any".to_string(),
+        ];
+        assert_eq!(
+            Config {
+                query: v[1].clone(),
+                filename: v[2].clone(),
+                case_sensitive: false,
+            },
+            Config::new(v.into_iter()).unwrap()
+        );
+
+        //test using --any to specify insensitive case even after bad-arg
+        let v = vec![
+            "minigrep".to_string(),
+            "word".to_string(),
+            "data.txt".to_string(),
+            "bad-arg".to_string(),
+            "--any".to_string(),
+        ];
+        assert_eq!(
+            Config {
+                query: v[1].clone(),
+                filename: v[2].clone(),
+                case_sensitive: false,
+            },
+            Config::new(v.into_iter()).unwrap()
+        );
     }
 }
 
 //use the trait object `Box<dyn Error>` to give flexibility in returning error values
+/// The logic for executing minigrep.
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     //`?` will return error value from current function for caller to handle
     let contents = fs::read_to_string(config.filename)?;
@@ -131,6 +183,8 @@ fn test_run() {
 
 //the lifetime parameter `'a` specifies which argument lifetime is connected to
 //the lifetime of the return value.
+
+/// Searchs for `query` within a string separated by newlines in `contents`.
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     contents
         .lines()
